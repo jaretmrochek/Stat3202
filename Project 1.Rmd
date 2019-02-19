@@ -1,0 +1,101 @@
+---
+title: "Project 1"
+author: "Jaret Mrochek"
+date: "2/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r echo= FALSE, include=FALSE}
+library(readr)
+ncaa_data <- read_table2("basketball_use.dat", 
+    col_names = FALSE)
+colnames(ncaa_data) = c("year", "w_team", "w_score", "l_team", "l_score")
+```
+
+```{r}
+#Average total score in each game
+avgTotalScore <- (sum(ncaa_data$w_score) + sum(ncaa_data$l_score)) / length(ncaa_data$w_score)
+print(avgTotalScore)
+```
+
+```{r}
+#making a histogram of total score
+totalScores <- c(0)
+totalScores <- ncaa_data$w_score + ncaa_data$l_score
+
+hist(x = totalScores, freq = TRUE, main = "Histogram of total game scores", xlab = "Score", ylab = "Frequency")
+```
+
+```{r}
+#Estimating a gamma
+xbar <- avgTotalScore
+xSquaredBar <- mean((ncaa_data$w_score + ncaa_data$l_score)^2)
+
+alpha <- xbar^2 / (xSquaredBar - xbar^2)
+beta <- avgTotalScore / alpha
+
+
+hist(x = totalScores, probability = TRUE, main = "Histogram of total game scores w/Gamma curve", xlab = "Score", ylab = "Frequency", ylim = c(0, .017))
+box()
+curve(dgamma(x = x, shape = alpha, scale = beta), add = TRUE)
+```
+
+```{r}
+#QQ-Plot
+qqplot(x = qgamma(p = ppoints(totalScores), shape = alpha, scale = beta), 
+       y = totalScores,
+       main = "Total Scores, gamma dist",
+       xlab = "Theoretical total score Gamma",
+       ylab = "Sample total score")
+abline(a = 0, b = 1, col = "blue")
+grid()
+```
+
+```{r}
+hist(x = totalScores, probability = TRUE, main = "Histogram of total game scores w/Normal Curve", xlab = "Score", ylab = "Frequency", ylim = c(0, .017))
+box()
+curve(dnorm(x = x, mean = avgTotalScore, sd = sqrt(var(totalScores))), add = TRUE)
+```
+
+```{r}
+qqplot(x = qnorm(p = ppoints(totalScores), mean = avgTotalScore, sd = sqrt(var(totalScores))), 
+       y = totalScores,
+       main = "Total Scores, normal dist",
+       xlab = "Theoretical total score normal",
+       ylab = "Sample total score")
+abline(a = 0, b = 1, col = "blue")
+grid()
+```
+
+```{r}
+#trend in total score
+plot(x = ncaa_data$year, y = totalScores, type = "p", xlab = "Year", ylab = "Scores", main = "Trend in total scores through the years")
+```
+
+```{r}
+#What is the margin of victory?
+margin <- ncaa_data$w_score - ncaa_data$l_score
+plot(x = c(1:1706), y = margin, type = 'p', xlab = "Game / year technically")
+```
+
+```{r}
+averageMargin <- round(mean(margin), digits = 2)
+```
+
+```{r}
+#Which is the most winningest team?
+#https://stackoverflow.com/questions/48632957/how-to-find-the-most-repeated-word-in-a-vector-with-r
+print(names(table(ncaa_data$w_team))[as.vector(table(ncaa_data$w_team)) == max(table(ncaa_data$w_team))])
+print(max(table(ncaa_data$w_team)))
+```
+
+```{r}
+#Whats OSU's record?
+#https://stackoverflow.com/questions/7782113/count-word-occurrences-in-r
+c(wins = length(grep("OHIO_STATE", ncaa_data$w_team)), losses = length(grep("OHIO_STATE", ncaa_data$l_team)))
+```
