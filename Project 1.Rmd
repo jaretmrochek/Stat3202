@@ -29,6 +29,11 @@ totalScores <- c(0)
 totalScores <- ncaa_data$w_score + ncaa_data$l_score
 
 hist(x = totalScores, freq = TRUE, main = "Histogram of total game scores", xlab = "Score", ylab = "Frequency")
+print(fivenum(totalScores))
+```
+
+```{r}
+boxplot(totalScores, horizontal = TRUE)
 ```
 
 ```{r}
@@ -75,6 +80,15 @@ grid()
 ```{r}
 #trend in total score
 plot(x = ncaa_data$year, y = totalScores, type = "p", xlab = "Year", ylab = "Scores", main = "Trend in total scores through the years")
+abline(v = 1986, col = "blue")
+legend(x = 1940, y = 250, legend = "Three point line added", col = "blue", lty = 1)
+#reason for this? Most likely due to increase in specialization in sports throughout peoples' childhoods. 
+#College kids were significantly better athletes in the 90's than the 40's and 50's
+#Also changes in coaching, strategy, addition of the 3-point line in 1986
+```
+
+```{r}
+
 ```
 
 ```{r}
@@ -94,6 +108,11 @@ print(names(table(ncaa_data$w_team))[as.vector(table(ncaa_data$w_team)) == max(t
 print(max(table(ncaa_data$w_team)))
 ```
 
+```{r}
+#Who has the most losses?
+print(names(table(ncaa_data$l_team))[as.vector(table(ncaa_data$l_team)) == max(table(ncaa_data$l_team))])
+print(max(table(ncaa_data$l_team)))
+```
 ```{r}
 #Whats OSU's record?
 #https://stackoverflow.com/questions/7782113/count-word-occurrences-in-r
