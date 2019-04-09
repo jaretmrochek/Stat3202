@@ -1,0 +1,43 @@
+---
+title: "Project 2"
+author: "Jaret Mrochek"
+date: "4/2/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/Desktop/Sophomore year/Stat 3202/Projects/Project 2")
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r, warnings = FALSE}
+library(readr)
+flights <- read_csv("2008.csv")
+```
+
+```{r}
+flights$Month = month.name[flights$Month]
+day_names = c("Monday", "Tuesday", "Wednesday", "Thursday", 
+              "Friday", "Saturday", "Sunday")
+flights$DayOfWeek = factor(day_names[flights$DayOfWeek], levels = day_names)
+```
+
+What is the worst airport to fly into. Judged by taxiIn, which is how long the plane sits to wait for it's gate to open.
+
+```{r}
+taxiInByDest <- flights %>% filter(UniqueCarrier %in% c("UA", "DL", "AA", "WN")) %>% select(Dest, TaxiIn)
+```
+
+```{r}
+anova_by_dest <- aov(TaxiIn ~ Dest, data = taxiInByDest)
+summary(anova_by_dest)
+```
+
+```{r}
+LAXIncident <-flights %>% filter(Month == "August") %>% filter(DayofMonth == 16) %>% filter(Origin == "LAX") 
+```
+
