@@ -10,34 +10,98 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Desktop/Sophomore year/Stat 3202/Projects/Project 2")
 ```
 
-```{r}
+```{r echo = FALSE}
 library(tidyverse)
+library(dplyr)
+library(ggplot2)
 ```
 
-```{r, warnings = FALSE}
+```{r, warning = FALSE, message = FALSE, results = "hide"}
 library(readr)
-flights <- read_csv("2008.csv")
+
+allNYLA <- read_csv("pTry.csv")
+
+allNYLA$ActualElapsedTime[!is.na(allNYLA$ActualElapsedTime)]
+head(allNYLA)
 ```
 
 ```{r}
-flights$Month = month.name[flights$Month]
-day_names = c("Monday", "Tuesday", "Wednesday", "Thursday", 
-              "Friday", "Saturday", "Sunday")
-flights$DayOfWeek = factor(day_names[flights$DayOfWeek], levels = day_names)
-```
-
-What is the worst airport to fly into. Judged by taxiIn, which is how long the plane sits to wait for it's gate to open.
-
-```{r}
-taxiInByDest <- flights %>% filter(UniqueCarrier %in% c("UA", "DL", "AA", "WN")) %>% select(Dest, TaxiIn)
+nyla <- allNYLA %>% filter(Origin == "JFK") %>% filter(Dest == "LAX")
+lany <- allNYLA %>% filter(Origin == "LAX") %>% filter(Dest == "JFK")
 ```
 
 ```{r}
-anova_by_dest <- aov(TaxiIn ~ Dest, data = taxiInByDest)
-summary(anova_by_dest)
+lanyYear <- allNYLA %>% filter(Origin == "LAX") %>% filter(Dest == "JFK") %>% group_by(Year) %>% summarize(num_flights = n(), total_flight_time = sum(ActualElapsedTime, na.rm = TRUE), avg_flight_time = total_flight_time / num_flights)
+head(lanyYear)
 ```
 
 ```{r}
-LAXIncident <-flights %>% filter(Month == "August") %>% filter(DayofMonth == 16) %>% filter(Origin == "LAX") 
+nylaYear <- allNYLA %>% filter(Origin == "JFK") %>% filter(Dest == "LAX") %>% group_by(Year) %>% summarize(num_flights = n(), total_flight_time = sum(ActualElapsedTime, na.rm = TRUE), avg_flight_time = total_flight_time / num_flights)
+head(nylaYear)
 ```
 
+```{r}
+p = ggplot() + 
+  geom_line(data = nylaYear, aes(x = Year, y = avg_flight_time), color = "blue") +
+  geom_line(data = lanyYear, aes(x = Year, y = avg_flight_time), color = "red") +
+  xlab('Year') +
+  ylab('Average flight time') 
+
+print(p)
+```
+
+```{r}
+hist(x = allNYLA$ActualElapsedTime, probability = TRUE, xlab = "Time", breaks = 1000, xlim = c(200, 600), main = "")
+```
+
+```{r}
+hist(x = lany$ActualElapsedTime, probability = TRUE, xlab = "Time", breaks = 500, col = "skyblue", xlim = c(220, 475), ylim = c(0, .023), main = "")
+hist(x = nyla$ActualElapsedTime, probability = TRUE, add = TRUE, breaks = 500, col = "red")
+legend("topright", c("LAX -> JFK", "JFK -> LAX"), fill = c("skyblue", "red"))
+```
+
+```{r}
+LANYanova <- aov(ActualElapsedTime ~ Year, data = lany)
+summary(LANYanova)
+```
+
+```{r}
+par(mfrow = c(1, 2))
+qqnorm(residuals(LANYanova), pch = 20)
+qqline(residuals(LANYanova), lwd = 2, col = "darkred")
+grid()
+
+plot(fitted(LANYanova), residuals(LANYanova), 
+     xlab = "Fitted Values", ylab = "Residuals", pch = 20,
+     main = "Residuals vs Fitted Values")
+grid()
+abline(h = 0, col = "darkred", lwd = 2)
+
+```
+
+```{r}
+check <- nyla %>% group_by(Year) %>% summarize(num_flights = n())
+```
+
+
+```{r}
+NYLAanova <- aov(ActualElapsedTime ~ Year, data = nyla)
+summary(NYLAanova)
+```
+
+```{r}
+par(mfrow = c(1, 2))
+qqnorm(residuals(NYLAanova), pch = 20)
+qqline(residuals(NYLAanova), lwd = 2, col = "darkred")
+grid()
+
+plot(fitted(NYLAanova), residuals(NYLAanova), 
+     xlab = "Fitted Values", ylab = "Residuals", pch = 20,
+     main = "Residuals vs Fitted Values")
+grid()
+abline(h = 0, col = "darkred", lwd = 2)
+```
+
+```{r}
+summary(aov(Cancelled ~ UniqueCarrier, data = allNYLA))
+```
