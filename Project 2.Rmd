@@ -30,17 +30,18 @@ nyla <- allNYLA %>% filter(Origin == "JFK") %>% filter(Dest == "LAX")
 lany <- allNYLA %>% filter(Origin == "LAX") %>% filter(Dest == "JFK")
 ```
 
-```{r}
+```{r, echo = FALSE}
 lanyYear <- allNYLA %>% filter(Origin == "LAX") %>% filter(Dest == "JFK") %>% group_by(Year) %>% summarize(num_flights = n(), total_flight_time = sum(ActualElapsedTime, na.rm = TRUE), avg_flight_time = total_flight_time / num_flights)
 head(lanyYear)
 ```
 
-```{r}
+```{r, echo = FALSE}
 nylaYear <- allNYLA %>% filter(Origin == "JFK") %>% filter(Dest == "LAX") %>% group_by(Year) %>% summarize(num_flights = n(), total_flight_time = sum(ActualElapsedTime, na.rm = TRUE), avg_flight_time = total_flight_time / num_flights)
 head(nylaYear)
 ```
+Now we will dive into the trend in average flight time between JFK and LAX. The blue line below represents the average flight time on the flight from JFK to LAX, and the red line is going the opposite direction. As expected the flight going east to west is longer because you're going against the wind. Our group at first expected that flight times would be getting faster by each year due to changes in airplane technology. However, the graph shows that flight times seem to be increasing. Although the data shows no reason for this. We came to the assumption that airplanes aren't getting faster, but getting more fuel efficient. Which is causing the slowdown of airtime. 
 
-```{r}
+```{r, echo = FALSE}
 p = ggplot() + 
   geom_line(data = nylaYear, aes(x = Year, y = avg_flight_time), color = "blue") +
   geom_line(data = lanyYear, aes(x = Year, y = avg_flight_time), color = "red") +
@@ -50,22 +51,27 @@ p = ggplot() +
 print(p)
 ```
 
-```{r}
+Looking at the histogram below, you can see a bimodal distribution of all the flight times. But this isn't the correct way to disect the information since the two flight paths are quite different due to the wind.
+```{r, echo = FALSE}
 hist(x = allNYLA$ActualElapsedTime, probability = TRUE, xlab = "Time", breaks = 1000, xlim = c(200, 600), main = "")
 ```
 
-```{r}
+This dual histogram below shows how the flight times for each flight seems to be mostly normally distribuited. With a little bit of right skew. We will now try an ANOVA test to see the correlation between the flight time and the year in which the flight took place. 
+```{r, echo = FALSE}
 hist(x = lany$ActualElapsedTime, probability = TRUE, xlab = "Time", breaks = 500, col = "skyblue", xlim = c(220, 475), ylim = c(0, .023), main = "")
 hist(x = nyla$ActualElapsedTime, probability = TRUE, add = TRUE, breaks = 500, col = "red")
 legend("topright", c("LAX -> JFK", "JFK -> LAX"), fill = c("skyblue", "red"))
 ```
 
-```{r}
+On the flight form LAX to JFK, with an $\alpha$ = 0.01 and a null hypothesis that flight times are the same from year to year, and an alternative that at least one of them differs. With the p-value gives by the ANOVA, we reject the null hypothesis, and with a p-value of essentially 0, we can reject at any significant alpha level. 
+
+```{r, echo = FALSE}
 LANYanova <- aov(ActualElapsedTime ~ Year, data = lany)
 summary(LANYanova)
 ```
+The graphs below show how the data holds up normally. It does quite well until we get to the upper extremes. The variances hold quite well all around. 
 
-```{r}
+```{r, echo = FALSE}
 par(mfrow = c(1, 2))
 qqnorm(residuals(LANYanova), pch = 20)
 qqline(residuals(LANYanova), lwd = 2, col = "darkred")
@@ -79,17 +85,15 @@ abline(h = 0, col = "darkred", lwd = 2)
 
 ```
 
-```{r}
-check <- nyla %>% group_by(Year) %>% summarize(num_flights = n())
-```
-
-
-```{r}
+On the flight form JFK to LAX, with an $\alpha$ = 0.01 and a null hypothesis that flight times are the same from year to year, and an alternative that at least one of them differs. With the p-value gives by the ANOVA, we reject the null hypothesis, and with a p-value of essentially 0, we can reject at any significant alpha level. 
+```{r, echo = FALSE}
 NYLAanova <- aov(ActualElapsedTime ~ Year, data = nyla)
 summary(NYLAanova)
 ```
 
-```{r}
+The graphs below show how the data holds up normally. It does quite well until we get to the upper extremes. The normality holds up even better than the previous flight path from LAX to JFK. The variances hold quite well all around as well.
+
+```{r, echo = FALSE}
 par(mfrow = c(1, 2))
 qqnorm(residuals(NYLAanova), pch = 20)
 qqline(residuals(NYLAanova), lwd = 2, col = "darkred")
@@ -100,8 +104,4 @@ plot(fitted(NYLAanova), residuals(NYLAanova),
      main = "Residuals vs Fitted Values")
 grid()
 abline(h = 0, col = "darkred", lwd = 2)
-```
-
-```{r}
-summary(aov(Cancelled ~ UniqueCarrier, data = allNYLA))
 ```
